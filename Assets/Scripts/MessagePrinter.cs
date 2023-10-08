@@ -58,4 +58,13 @@ public class MessagePrinter : MonoBehaviour
         _currentIndex = -1;
         _message = message;
     }
+
+    /// <summary>
+    /// Œ»İÄ¶’†‚Ì•¶šo—Í‚ğÈ—ª‚·‚éB
+    /// </summary>
+    public void Skip()
+    {
+        _textUi.text = _message;
+        _currentIndex = _message.Length - 1;
+    }
 }

@@ -21,7 +21,11 @@ public class MessageSequencer : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            if (!_printer.IsPrinting) { MoveNext(); }
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (_printer.IsPrinting) { _printer.Skip(); }
+                else { MoveNext(); }
+            }
         }
     }
 
