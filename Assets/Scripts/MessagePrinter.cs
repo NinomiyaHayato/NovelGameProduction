@@ -54,7 +54,7 @@ public class MessagePrinter : MonoBehaviour
     public void ShowMessage(string message)
     {
         _interval = 0.2f;
-        _textUi.text = null;
+        _textUi.text = "";
         _currentIndex = -1;
         _message = message;
     }
