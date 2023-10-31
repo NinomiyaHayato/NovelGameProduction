@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -7,45 +9,12 @@ public class MessagePrinter : MonoBehaviour
     private TMP_Text _textUi = default;
 
     [SerializeField]
-    private string _message = "";
-
-    [SerializeField]
     private float _speed = 1.0F;
 
-    private float _elapsed = 0; // 文字を表示してからの経過時間
-    private float _interval; // 文字毎の待ち時間
-
-    // _message フィールドから表示する現在の文字インデックス。
-    // 何も指していない場合は -1 とする。
-    private int _currentIndex = -1;
-
     /// <summary>
-    /// 文字出力中かどうか。
+    /// 現在、文字表示アニメーション中かどうか。
     /// </summary>
-    public bool IsPrinting
-    {
-        get
-        {
-            return _currentIndex + 1 != _message.Length;
-        }
-    }
-    private void Start()
-    {
-        ShowMessage(_message);
-    }
-
-    private void Update()
-    {
-        if (_textUi is null || _message is null || _currentIndex + 1 >= _message.Length) { return; }
-
-        _elapsed += Time.deltaTime;
-        if (_elapsed > _interval)
-        {
-            _elapsed = 0;
-            _currentIndex++;
-            _textUi.text += _message[_currentIndex];
-        }
-    }
+    public bool IsPrinting { get; private set; }
 
     /// <summary>
     /// 指定のメッセージを表示する。
@@ -53,10 +22,39 @@ public class MessagePrinter : MonoBehaviour
     /// <param name="message">テキストとして表示するメッセージ。</param>
     public void ShowMessage(string message)
     {
-        _interval = 0.2f;
+        // メッセージが null なら例外出す。
+        if (message is null)
+        {
+            throw new ArgumentNullException(nameof(message));
+        }
+        StartCoroutine(ShowMessageCoroutine(message));
+    }
+
+    private IEnumerator ShowMessageCoroutine(string message)
+    {
+        if (_textUi is null || message is null) { yield break; }
+
+        _isSkipRequested = false;
         _textUi.text = "";
-        _currentIndex = -1;
-        _message = message;
+        IsPrinting = true;
+
+        var index = 0;
+        var elapsed = 0F;
+        var interval = _speed / message.Length;
+        while (index < message.Length && !_isSkipRequested)
+        {
+            elapsed += Time.deltaTime;
+            if (elapsed > interval)
+            {
+                elapsed = 0;
+                _textUi.text += message[index];
+                index++;
+            }
+            yield return null; // 1フレーム分の処理
+        }
+
+        _textUi.text = message;
+        IsPrinting = false;
     }
 
     /// <summary>
@@ -64,7 +62,7 @@ public class MessagePrinter : MonoBehaviour
     /// </summary>
     public void Skip()
     {
-        _textUi.text = _message;
-        _currentIndex = _message.Length - 1;
+        _isSkipRequested = true;
     }
+    private bool _isSkipRequested; // スキップが要求されたかどうか
 }
