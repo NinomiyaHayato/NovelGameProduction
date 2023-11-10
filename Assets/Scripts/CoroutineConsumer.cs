@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Threading;
 using UnityEngine;
 
@@ -6,30 +7,27 @@ public class CoroutineConsumer : MonoBehaviour
     [SerializeField]
     private CoroutineProvider _provider;
 
-    private CancellationTokenSource _ctsA = new();
-    private CancellationTokenSource _ctsB = new();
-
     void Start()
     {
-        _provider.Run("èàóù1", _ctsA.Token);
-        _provider.Run("èàóù2", _ctsB.Token);
+        StartCoroutine(RunCoroutine());
     }
 
-    private void OnDestroy()
+    private IEnumerator RunCoroutine()
     {
-        _ctsA.Dispose();
-        _ctsB.Dispose();
-    }
+        using var ctsA = new CancellationTokenSource();
+        using var ctsB = new CancellationTokenSource();
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.A))
+        var a = _provider.RunAsync("èàóù1", ctsA.Token);
+        var b = _provider.RunAsync("èàóù2", ctsB.Token);
+
+        while (!a.IsCompleted || !b.IsCompleted)
         {
-            _ctsA.Cancel();
+            if (Input.GetKeyDown(KeyCode.A)) { ctsA.Cancel(); }
+            if (Input.GetKeyDown(KeyCode.B)) { ctsB.Cancel(); }
+            yield return null;
         }
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            _ctsB.Cancel();
-        }
+
+        Debug.Log($"èàóù1 Result={a.Result}");
+        Debug.Log($"èàóù2 Result={b.Result}");
     }
 }
